@@ -35,7 +35,10 @@ public class T1ShortApduProtocol implements CcidTransportProtocol {
 
     @Override
     public byte[] transceive(@NonNull final byte[] apdu) throws UsbTransportException {
+        Log.v(Constants.TAG, String.format("Sending APDU {%s}\n", Hex.toHexString(apdu)));
         mTransceiver.sendXfrBlock(apdu);
-        return mTransceiver.receiveRaw();
+        byte[] retval = mTransceiver.receiveRaw();
+        Log.v(Constants.TAG, String.format("Received APDU {%s}\n", Hex.toHexString(retval)));
+        return retval;
     }
 }
