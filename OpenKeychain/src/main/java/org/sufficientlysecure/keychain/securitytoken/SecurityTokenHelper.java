@@ -115,15 +115,24 @@ public class SecurityTokenHelper {
 
     private String getHolderName(byte[] name) {
         try {
-            return (new String(name, 4, name[3])).replace('<', ' ');
-        } catch (IndexOutOfBoundsException e) {
+            Iso7816TLV[] tlvs = Iso7816TLV.readList(name, true);
+            if (tlvs.length == 1 && tlvs[0].mT == 0x65) {
+                tlvs = ((Iso7816TLV.Iso7816CompositeTLV) tlvs[0]).mSubs;
+            }
+            for (Iso7816TLV tlv : tlvs) {
+                switch (tlv.mT) {
+                    case 0x5B:
+                        return (new String(tlv.mV, "UTF-8")).replace('<', ' ');
+                }
+            }
+        } catch (IOException e) {
             // try-catch for https://github.com/FluffyKaon/OpenPGP-Card
             // Note: This should not happen, but happens with
             // https://github.com/FluffyKaon/OpenPGP-Card, thus return an empty string for now!
 
             Log.e(Constants.TAG, "Couldn't get holder name, returning empty string!", e);
-            return "";
         }
+        return "";
     }
 
     public Passphrase getPin() {
